@@ -2,25 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Will you be my Valentine Raquel Nazanalich?</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Will you be my Valentine?</title>
 
   <style>
     body{
       height:100vh; margin:0;
       display:flex; flex-direction:column;
       align-items:center; justify-content:center;
-      font-family:Arial, sans-serif;
+      font-family: Arial, sans-serif;
       background: linear-gradient(135deg, #ff9a9e, #fad0c4);
       overflow:hidden;
     }
 
-    h1{ color:#b30059; margin:0 0 40px; text-align:center; padding:0 16px; }
+    h1{
+      color:#b30059;
+      margin:0 0 40px;
+      text-align:center;
+      padding:0 16px;
+    }
 
     .buttons{
       display:flex;
-      gap:180px;                 /* ✅ initial spacing */
-      position:relative;
+      gap:180px;
       align-items:center;
       justify-content:center;
     }
@@ -31,36 +35,26 @@
       border:none;
       border-radius:12px;
       cursor:pointer;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
-      transform: translateZ(0);
+      box-shadow:0 10px 25px rgba(0,0,0,0.12);
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     #yes{
       background:#ff4d6d; color:#fff;
-      transition: transform 200ms ease;
+      transition: transform 180ms ease;
     }
-    #yes:hover{ transform: scale(1.06); }
+    #yes:active{ transform: scale(1.05); }
 
     #no{
       background:#999; color:#fff;
-      /* smooth motion */
-      transition: left 220ms ease, top 220ms ease, transform 120ms ease;
-      will-change: left, top, transform;
-      touch-action: manipulation;
-    }
-
-    /* little “uh-oh” wiggle */
-    @keyframes wiggle {
-      0%{ transform: rotate(0deg) scale(1); }
-      35%{ transform: rotate(-8deg) scale(1.02); }
-      70%{ transform: rotate(8deg) scale(1.02); }
-      100%{ transform: rotate(0deg) scale(1); }
+      position:absolute; /* we will place it manually */
     }
 
     .final{
       text-align:center;
       color:#b30059;
-      padding: 0 16px;
+      padding:0 16px;
     }
   </style>
 </head>
@@ -77,102 +71,83 @@
     const yesBtn = document.getElementById("yes");
     const noBtn  = document.getElementById("no");
 
-    // On click: cute result
+    // YES CLICK
     yesBtn.addEventListener("click", () => {
       document.body.innerHTML = `
         <div class="final">
-          <h1>YAY!!! 💕🥰</h1>
-          <p style="font-size:22px;margin-top:10px;">You’re officially my Valentine 💘</p>
+          <h1>Good because you didn't have a choice!!! 💕🥰</h1>
+          <p style="font-size:22px;margin-top:10px;">
+            You’re officially my Valentine 💘
+          </p>
         </div>
       `;
-      confettiHearts();
     });
 
-    // Set up "No" starting position so it doesn't overlap
-    // Keep it in normal flow initially so flex gap works.
-    // Once we need to move it, we switch to absolute at its current screen position.
-    let isFloating = false;
+    // ----- BOUNCING NO (starts on touch) -----
+    let bouncing = false;
+    let x = 0, y = 0;
+    let vx = 7, vy = 6;
+    let rafId = null;
 
-    function makeFloatingAtCurrentSpot() {
-      if (isFloating) return;
-      const rect = noBtn.getBoundingClientRect();
-      noBtn.style.position = "absolute";
-      noBtn.style.left = rect.left + "px";
-      noBtn.style.top  = rect.top  + "px";
-      isFloating = true;
+    function bounds() {
+      const pad = 10;
+      return {
+        pad,
+        maxX: window.innerWidth  - noBtn.offsetWidth  - pad,
+        maxY: window.innerHeight - noBtn.offsetHeight - pad
+      };
     }
 
-    function moveNoSmoothly() {
-      makeFloatingAtCurrentSpot();
+    function startBounce() {
+      if (bouncing) return;
+      bouncing = true;
 
-      const padding = 12; // keep away from edges
-      const maxX = window.innerWidth  - noBtn.offsetWidth  - padding;
-      const maxY = window.innerHeight - noBtn.offsetHeight - padding;
+      // lock current position before bouncing
+      const rect = noBtn.getBoundingClientRect();
+      x = rect.left;
+      y = rect.top;
+      noBtn.style.left = x + "px";
+      noBtn.style.top  = y + "px";
 
-      // Pick a new target far-ish from current position for drama
-      const currentX = parseFloat(noBtn.style.left) || 0;
-      const currentY = parseFloat(noBtn.style.top)  || 0;
+      rafId = requestAnimationFrame(tick);
+    }
 
-      let x, y;
-      let tries = 0;
-      do {
-        x = padding + Math.random() * (maxX - padding);
-        y = padding + Math.random() * (maxY - padding);
-        tries++;
-      } while (tries < 10 && Math.hypot(x - currentX, y - currentY) < 180);
+    function tick() {
+      const { pad, maxX, maxY } = bounds();
 
-      // Wiggle then slide
-      noBtn.style.animation = "wiggle 180ms ease";
-      setTimeout(() => (noBtn.style.animation = ""), 200);
+      x += vx;
+      y += vy;
+
+      if (x <= pad || x >= maxX) vx *= -1;
+      if (y <= pad || y >= maxY) vy *= -1;
 
       noBtn.style.left = x + "px";
       noBtn.style.top  = y + "px";
+
+      rafId = requestAnimationFrame(tick);
     }
 
-    // Desktop: dodge as you approach
-    noBtn.addEventListener("mousemove", moveNoSmoothly);
-    noBtn.addEventListener("mouseenter", moveNoSmoothly);
-
-    // Mobile: dodge on touch (before click)
+    // Mobile: touching No starts the bounce
     noBtn.addEventListener("touchstart", (e) => {
-      e.preventDefault(); // stop the tap from clicking it
-      moveNoSmoothly();
+      e.preventDefault(); // block click
+      startBounce();
     }, { passive: false });
 
-    // If the window resizes, keep it on-screen
+    // Safety: if clicked anyway
+    noBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      startBounce();
+    });
+
+    // Keep in bounds on rotation
     window.addEventListener("resize", () => {
-      if (!isFloating) return;
-      const padding = 12;
-      const maxX = window.innerWidth  - noBtn.offsetWidth  - padding;
-      const maxY = window.innerHeight - noBtn.offsetHeight - padding;
-      const x = Math.min(Math.max(parseFloat(noBtn.style.left) || padding, padding), maxX);
-      const y = Math.min(Math.max(parseFloat(noBtn.style.top)  || padding, padding), maxY);
+      if (!bouncing) return;
+      const { pad, maxX, maxY } = bounds();
+      x = Math.min(Math.max(x, pad), maxX);
+      y = Math.min(Math.max(y, pad), maxY);
       noBtn.style.left = x + "px";
       noBtn.style.top  = y + "px";
     });
-
-    // Tiny heart/confetti effect without libraries
-    function confettiHearts() {
-      const hearts = ["💖","💕","💘","💗","💝"];
-      for (let i = 0; i < 40; i++) {
-        const s = document.createElement("div");
-        s.textContent = hearts[Math.floor(Math.random()*hearts.length)];
-        s.style.position = "fixed";
-        s.style.left = Math.random() * 100 + "vw";
-        s.style.top = "-20px";
-        s.style.fontSize = (18 + Math.random()*18) + "px";
-        s.style.pointerEvents = "none";
-        s.style.transition = "transform 1.4s ease, opacity 1.4s ease";
-        document.body.appendChild(s);
-
-        requestAnimationFrame(() => {
-          s.style.transform = `translateY(${110 + Math.random()*30}vh) rotate(${Math.random()*360}deg)`;
-          s.style.opacity = "0";
-        });
-
-        setTimeout(() => s.remove(), 1500);
-      }
-    }
   </script>
 </body>
 </html>
