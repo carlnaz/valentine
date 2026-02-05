@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Valentine?</title>
+  <style>
+    body {
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+      overflow: hidden;
+    }
+
+    h1 {
+      color: #b30059;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 120px; /* 👈 THIS controls the space */
+    }
+
+    button {
+      padding: 14px 28px;
+      font-size: 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #yes {
+      background-color: #ff4d6d;
+      color: white;
+    }
+
+    #no {
+      position: absolute; /* allows it to move freely */
+      background-color: #999;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Raquel, will you be my Valentine? 💖</h1>
+
+  <div class="buttons">
+    <button id="yes" onclick="yesClicked()">Yes</button>
+    <button id="no">No</button>
+  </div>
+
+  <script>
+    const noButton = document.getElementById("no");
+
+    noButton.addEventListener("mouseover", () => {
+      const maxX = window.innerWidth - noButton.offsetWidth;
+      const maxY = window.innerHeight - noButton.offsetHeight;
+
+      noButton.style.left = Math.random() * maxX + "px";
+      noButton.style.top = Math.random() * maxY + "px";
+    });
+
+    function yesClicked() {
+      document.body.innerHTML = `
+        <h1>YAY!!! 💕🥰</h1>
+        <p style="font-size:24px;">You’re officially my Valentine 💘</p>
+      `;
+    }
+  </script>
+
+</body>
+</html>
